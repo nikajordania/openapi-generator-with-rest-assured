@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import pet.store.v3.api.PetApi;
 import pet.store.v3.invoker.ApiClient;
 import pet.store.v3.invoker.JacksonObjectMapper;
+import pet.store.v3.model.Category;
 import pet.store.v3.model.Pet;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.config.ObjectMapperConfig.objectMapperConfig;
 import static io.restassured.config.RestAssuredConfig.config;
 import static org.apache.http.HttpStatus.SC_OK;
+import static org.hamcrest.Matchers.*;
 import static pet.store.v3.invoker.ResponseSpecBuilders.shouldBeCode;
 import static pet.store.v3.invoker.ResponseSpecBuilders.validatedWith;
 
@@ -42,7 +44,6 @@ public class PetApiV3Test {
     }
 
     @Test
-
     public void printRawResponseTest() {
         Pet body = new Pet();
         body.setId(1L);
@@ -100,4 +101,92 @@ public class PetApiV3Test {
 
         pets1.forEach(pet -> System.out.println(pet.getName()));
     }
+
+//    {
+//  "id": 10,
+//  "name": "doggie",
+//  "category": {
+//    "id": 1,
+//    "name": "Dogs"
+//  },
+//  "photoUrls": [
+//    "string"
+//  ],
+//  "tags": [
+//    {
+//      "id": 0,
+//      "name": "string"
+//    }
+//  ],
+//  "status": "available"
+//}
+
+    @Test
+    public void putPetToStoreTest() {
+
+        Pet pet = new Pet();
+        pet
+                .id(10L)
+                .name("doggie")
+                .category(new Category().id(10L).name("asd"))
+                .addPhotoUrlsItem("sda")
+                .addPhotoUrlsItem("sfdgsgbfb")
+
+                .addTagsItem(new pet.store.v3.model.Tag().id(123L).name("asdas"))
+
+                .status(Pet.StatusEnum.AVAILABLE)
+
+
+        ;
+        Pet pet1 = api.pet().addPet().body(pet).executeAs(response -> {
+
+            response.then().log().all();
+            validatedWith(shouldBeCode(200));
+            return response;
+        });
+
+        System.out.println(pet1);
+    }
+
+    @Test
+    public void putPetToStoreTest2() {
+
+        Pet pet = new Pet();
+        pet
+                .id(10L)
+                .name("doggie")
+                .category(new Category().id(10L).name("Dogs"))
+                .addPhotoUrlsItem("s1")
+                .addPhotoUrlsItem("s2")
+
+                .addTagsItem(new pet.store.v3.model.Tag().id(123L).name("asdas"))
+
+                .status(Pet.StatusEnum.AVAILABLE);
+
+        var ref = new Object() {
+            Response res;
+        };
+
+
+        Pet pet1 = api.pet().addPet().body(pet).executeAs(response -> {
+//            response.then().log().all();
+
+            ref.res = response;
+            return response;
+        });
+
+        System.out.println(pet1);
+        ref.res.then()
+                .statusCode(200)
+                .body("id", equalTo(10),
+                        "name", equalTo("doggie"),
+                        "category.id", equalTo(10),
+                        "category.name", equalTo("Dogs"),
+                        "photoUrls", hasItems("s1", "s2"),
+                        "tags[0].id", equalTo(123),
+                        "tags[0].name", equalTo("asdas"),
+                        "status", equalTo("available"));
+        ref.res.then().log().headers();
+    }
+
 }

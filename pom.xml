@@ -28,6 +28,9 @@
 
         <!-- security updates -->
         <commons-codec.version>1.16.1</commons-codec.version>
+
+        <aspectj.version>1.9.22</aspectj.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     </properties>
 
     <dependencies>
@@ -85,6 +88,23 @@
             <artifactId>commons-codec</artifactId>
             <version>${commons-codec.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.32</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -96,9 +116,15 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.32</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -106,25 +132,133 @@
             </plugin>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <!--                    <suiteXmlFiles>-->
+                    <!--                        <suiteXmlFile>TestNG.xml</suiteXmlFile>-->
+                    <!--                    </suiteXmlFiles>-->
+                    <argLine>
+                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                    </argLine>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjweaver</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <version>${openapi-generator-maven-plugin.version}</version>
                 <executions>
+<!--                    <execution>-->
+<!--                        <id>generate-pet-store-v3-client-api-code</id>-->
+<!--                        <goals>-->
+<!--                            <goal>generate</goal>-->
+<!--                        </goals>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                        <configuration>-->
+<!--                            <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>-->
+<!--                            <invokerPackage>pet.store.v3.invoker</invokerPackage>-->
+<!--                            <apiPackage>pet.store.v3.api</apiPackage>-->
+<!--                            <modelPackage>pet.store.v3.model</modelPackage>-->
+<!--                            <generatorName>java</generatorName>-->
+<!--                            <generateApiTests>false</generateApiTests>-->
+<!--                            <generateModelTests>false</generateModelTests>-->
+<!--                            <additionalProperties>hideGenerationTimestamp=true</additionalProperties>-->
+<!--&lt;!&ndash;                            <importMappings>&ndash;&gt;-->
+<!--&lt;!&ndash;                                <importMapping>&ndash;&gt;-->
+<!--&lt;!&ndash;                                    <import>integer</import>&ndash;&gt;-->
+<!--&lt;!&ndash;                                    <type>long</type>&ndash;&gt;-->
+<!--&lt;!&ndash;                                </importMapping>&ndash;&gt;-->
+<!--&lt;!&ndash;                            </importMappings>&ndash;&gt;-->
+<!--&lt;!&ndash;                            <typeMappings>&ndash;&gt;-->
+<!--&lt;!&ndash;                                <mapping>integer=Integer</mapping>&ndash;&gt;-->
+<!--&lt;!&ndash;                            </typeMappings>&ndash;&gt;-->
+<!--                            <configOptions>-->
+<!--&lt;!&ndash;                                <dateLibrary>java8</dateLibrary>&ndash;&gt;-->
+<!--&lt;!&ndash;                                <typeMappings>integer=Integer</typeMappings>&ndash;&gt;-->
+<!--&lt;!&ndash;                                <typeMappings>integer=Integer,int=int</typeMappings>&ndash;&gt;-->
+<!--                                <identifierNamingConvention>original</identifierNamingConvention>-->
+<!--&lt;!&ndash;                                <additionalModelTypeAnnotations>@lombok.RequiredArgsConstructor;@lombok.NoArgsConstructor;@lombok.AllArgsConstructor</additionalModelTypeAnnotations>&ndash;&gt;-->
+<!--                                <additionalModelTypeAnnotations>@lombok.Data;@lombok.experimental.Accessors(chain = true, fluent = true)</additionalModelTypeAnnotations>-->
+<!--                                <library>rest-assured</library>-->
+<!--                                <serializationLibrary>jackson</serializationLibrary>-->
+<!--                                <useJakartaEe>true</useJakartaEe>-->
+<!--                            </configOptions>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>generate-openlibrary-client-api-code</id>-->
+<!--                        <goals>-->
+<!--                            <goal>generate</goal>-->
+<!--                        </goals>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                        <configuration>-->
+<!--                            <inputSpec>${project.basedir}/src/main/resources/openlibrary.json</inputSpec>-->
+<!--                            <invokerPackage>openlibrary.invoker</invokerPackage>-->
+<!--                            <apiPackage>openlibrary.api</apiPackage>-->
+<!--                            <modelPackage>openlibrary.model</modelPackage>-->
+<!--                            <generatorName>java</generatorName>-->
+<!--                            <generateApiTests>false</generateApiTests>-->
+<!--                            <generateModelTests>false</generateModelTests>-->
+<!--                            <configOptions>-->
+<!--&lt;!&ndash;                                <ignoreGenerationErrors>true</ignoreGenerationErrors>&ndash;&gt;-->
+<!--                                <identifierNamingConvention>original</identifierNamingConvention>-->
+<!--                                <library>rest-assured</library>-->
+<!--                                <serializationLibrary>jackson</serializationLibrary>-->
+<!--                                <useJakartaEe>true</useJakartaEe>-->
+<!--                            </configOptions>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+
+<!--                    <execution>-->
+<!--                        <id>generate-hei-school-client-api-code</id>-->
+<!--                        <goals>-->
+<!--                            <goal>generate</goal>-->
+<!--                        </goals>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                        <configuration>-->
+<!--                            <inputSpec>${project.basedir}/src/main/resources/hei-school.yaml</inputSpec>-->
+<!--                            <invokerPackage>school.invoker</invokerPackage>-->
+<!--                            <apiPackage>school.api</apiPackage>-->
+<!--                            <modelPackage>school.model</modelPackage>-->
+<!--                            <generatorName>java</generatorName>-->
+<!--                            <generateApiTests>false</generateApiTests>-->
+<!--                            <generateModelTests>false</generateModelTests>-->
+<!--                            <configOptions>-->
+<!--                                <identifierNamingConvention>original</identifierNamingConvention>-->
+<!--                                <library>rest-assured</library>-->
+<!--                                <serializationLibrary>jackson</serializationLibrary>-->
+<!--                                <useJakartaEe>true</useJakartaEe>-->
+<!--                            </configOptions>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+
                     <execution>
-                        <id>generate-pet-store-v3-client-api-code</id>
+                        <id>generate-security-auth-client-api-code</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
-                            <invokerPackage>pet.store.v3.invoker</invokerPackage>
-                            <apiPackage>pet.store.v3.api</apiPackage>
-                            <modelPackage>pet.store.v3.model</modelPackage>
+                            <inputSpec>${project.basedir}/src/main/resources/security-auth.json</inputSpec>
+                            <invokerPackage>security.invoker</invokerPackage>
+                            <apiPackage>security.api</apiPackage>
+                            <modelPackage>security.model</modelPackage>
                             <generatorName>java</generatorName>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
+                            <generateApiTests>true</generateApiTests>
+                            <generateModelTests>true</generateModelTests>
+                            <additionalProperties>hideGenerationTimestamp=true</additionalProperties>
                             <configOptions>
+<!--                                <identifierNamingConvention>original</identifierNamingConvention>-->
+<!--                                <additionalModelTypeAnnotations>@lombok.Data;@lombok.experimental.Accessors(chain = true, fluent = true)</additionalModelTypeAnnotations>-->
                                 <library>rest-assured</library>
                                 <serializationLibrary>jackson</serializationLibrary>
                                 <useJakartaEe>true</useJakartaEe>
@@ -133,7 +267,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 
