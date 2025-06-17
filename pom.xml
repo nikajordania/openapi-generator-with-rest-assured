@@ -9,25 +9,30 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
         <wagon-maven-plugin.version>2.0.2</wagon-maven-plugin.version>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
-        <testng.version>7.10.1</testng.version>
-        <openapi-generator-maven-plugin.version>7.5.0</openapi-generator-maven-plugin.version>
-        <rest-assured.version>5.4.0</rest-assured.version>
-        <assertj-core.version>3.25.3</assertj-core.version>
-        <jackson-databind.version>2.17.0</jackson-databind.version>
-        <swagger-annotations.version>2.2.21</swagger-annotations.version>
+        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+        <testng.version>7.11.0</testng.version>
+        <openapi-generator-maven-plugin.version>7.13.0</openapi-generator-maven-plugin.version>
+        <rest-assured.version>5.5.5</rest-assured.version>
+        <assertj-core.version>3.27.3</assertj-core.version>
+        <jackson-databind.version>2.19.0</jackson-databind.version>
+        <swagger-annotations.version>2.2.31</swagger-annotations.version>
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
+        <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <jackson-datatype-jsr310.version>2.17.0</jackson-datatype-jsr310.version>
+        <jackson-datatype-jsr310.version>2.19.0</jackson-datatype-jsr310.version>
         <jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
 
         <!-- security updates -->
-        <commons-codec.version>1.16.1</commons-codec.version>
+        <commons-codec.version>1.18.0</commons-codec.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <lombok.version>1.18.38</lombok.version>
+
+        <aspectj.version>1.9.24</aspectj.version>
     </properties>
 
     <dependencies>
@@ -41,12 +46,7 @@
             <artifactId>rest-assured</artifactId>
             <version>${rest-assured.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj-core.version}</version>
-            <scope>test</scope>
-        </dependency>
+
         <!-- OpenAPI generation libraries -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -79,32 +79,47 @@
             <version>${jackson-databind-nullable.version}</version>
         </dependency>
 
+        <!-- Assertj Generator dependencies-->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj-core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>${javax.annotation-api.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- security updates -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>${commons-codec.version}</version>
         </dependency>
+
+        <!-- logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
-            </plugin>
-
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -124,6 +139,7 @@
                             <generatorName>java</generatorName>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
+                            <additionalProperties>hideGenerationTimestamp=true</additionalProperties>
                             <configOptions>
                                 <library>rest-assured</library>
                                 <serializationLibrary>jackson</serializationLibrary>
@@ -131,10 +147,88 @@
                             </configOptions>
                         </configuration>
                     </execution>
+<!--                <execution> Duplicate execution section to generate more api services -->
                 </executions>
             </plugin>
-
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>add-generated-sources</id>
+                        <phase>generate-sources</phase>  <!-- Before compilation -->
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/openapi/src/main/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <compileSourceRoots>
+                        <compileSourceRoot>${project.build.directory}/generated-sources/openapi/src/main/java</compileSourceRoot>
+                    </compileSourceRoots>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-assertions-generator-maven-plugin</artifactId>
+                <version>2.2.0</version>
+                <executions>
+                    <execution>
+                        <id>assertj</id>
+                        <goals>
+                            <goal>generate-assertions</goal>
+                        </goals>
+                        <phase>compile</phase>  <!-- After OpenAPI code is compiled -->
+                    </execution>
+                </executions>
+                <configuration>
+                    <packages>
+                        <param>pet.store.v3.model</param>
+<!--                        <param>other.any.package</param>-->
+                    </packages>
+                    <hierarchical>true</hierarchical>
+                    <entryPointClassPackage>org.assertj</entryPointClassPackage>
+                    <targetDir>${project.basedir}/target/generated-sources/assertj</targetDir>
+                    <generateSoftAssertions>true</generateSoftAssertions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <argLine>
+                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                    </argLine>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjweaver</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
-
 </project>

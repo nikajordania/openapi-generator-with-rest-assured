@@ -7,12 +7,14 @@ import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.apache.http.HttpStatus;
+import org.assertj.Assertions;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 import pet.store.v3.api.PetApi;
 import pet.store.v3.invoker.ApiClient;
 import pet.store.v3.invoker.JacksonObjectMapper;
 import pet.store.v3.model.Pet;
+import pet.store.v3.model.Tag;
 
 import java.util.List;
 
@@ -42,7 +44,6 @@ public class PetApiV3Test {
     }
 
     @Test
-
     public void printRawResponseTest() {
         Pet body = new Pet();
         body.setId(1L);
@@ -54,7 +55,9 @@ public class PetApiV3Test {
 
     @Test
     public void find() {
-        Response res = api.pet().findPetsByStatus().statusQuery(Pet.StatusEnum.AVAILABLE)
+        Response res = api.pet()
+                .findPetsByStatus()
+                .statusQuery(Pet.StatusEnum.AVAILABLE)
                 .execute(response -> response);
 
         System.out.println(res.getBody().prettyPrint());
@@ -62,7 +65,11 @@ public class PetApiV3Test {
 
     @Test
     public void findObjectExample() {
-        PetApi.FindPetsByStatusOper pets = api.pet().findPetsByStatus().statusQuery(Pet.StatusEnum.AVAILABLE);
+        PetApi.FindPetsByStatusOper pets = api.pet()
+//                .reqSpec(requestSpecBuilder -> requestSpecBuilder.addHeader("set-some-header", "header-value"))
+                .findPetsByStatus()
+                .statusQuery(Pet.StatusEnum.AVAILABLE);
+
         List<Pet> pets1 = pets.executeAs(validatedWith(shouldBeCode(SC_OK)));
 
         pets1.forEach(pet -> System.out.println(pet.getName()));
@@ -70,7 +77,7 @@ public class PetApiV3Test {
     }
 
     @Test
-    public void findObjectRestAssuredExample() {
+    public void findObjectRawRestAssuredExample() {
         var petList =
                 given()
                         .log().all()
@@ -99,5 +106,22 @@ public class PetApiV3Test {
         List<Pet> pets1 = pets.execute(response -> response).jsonPath().getList("$", Pet.class);
 
         pets1.forEach(pet -> System.out.println(pet.getName()));
+    }
+
+    @Test
+    public void assertjValidationExample() {
+        Pet petResponse = api.pet()
+                .getPetById()
+                .executeAs(validatedWith(shouldBeCode(SC_OK)));
+
+        Assertions.assertThat(petResponse)
+                .isNotNull()
+                .hasName("doggie")
+                .hasId(10L)
+                .hasStatus(Pet.StatusEnum.AVAILABLE)
+                .doesNotHaveTags(new Tag()
+                        .id(0L)
+                        .name("tag1"));
+
     }
 }
